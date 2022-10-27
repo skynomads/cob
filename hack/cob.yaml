@@ -1,0 +1,12 @@
+package:
+  source:
+    - pkg/*.yaml
+  target: dist/pkg
+  preBuild: |
+    echo pre-build
+image:
+  source:
+    - cont/*.yaml
+  target: dist/cont
+  ref:
+    helloworld: example.com/helloworld:1.0.0

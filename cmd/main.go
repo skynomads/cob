@@ -3,6 +3,7 @@ package main
 import (
 	"os"
 	"path/filepath"
+	"strings"
 
 	"github.com/alecthomas/kong"
 	kongyaml "github.com/alecthomas/kong-yaml"
@@ -13,36 +14,55 @@ var cli struct {
 	Dev   devCmd   `cmd:"dev" help:"Development mode."`
 	Build buildCmd `cmd:"dev" help:"Build packages and images."`
 
-	ConfigFile string `help:"Cob config file." short:"f" env:"COB_CONFIG_FILE" type:"path"`
+	ConfigFile string `help:"Cob config file." short:"f" env:"COB_CONFIG_FILE" type:"path" default:"cob.yaml"`
+
+	SigningKey    string   `help:"Key to use for signing." type:"path"`
+	KeyringAppend []string `help:"Path to extra keys to include in the keyring" type:"path"`
+
+	RepositoryAppend []string `help:"Path to extra repositories to include" type:"path"`
 
 	Package struct {
 		Source    []string `help:"Package source paths." env:"COB_PACKAGE_SOURCE" type:"path"`
-		Target    string   `help:"Package target path." env:"COB_PACKAGE_TARGET" default:"dist/packages"`
+		Target    string   `help:"Package target path." env:"COB_PACKAGE_TARGET" type:"path" default:"dist/packages"`
 		PreBuild  string   `help:"Pre-build command." env:"COB_PACKAGE_PREBUILD"`
 		PostBuild string   `help:"Post-build command." env:"COB_PACKAGE_POSTBUILD"`
-	} `embed:"" prefix:"package."`
+	} `embed:"" prefix:"package-"`
 	Image struct {
 		Source    []string          `help:"Image source paths." env:"COB_IMAGE_SOURCE" type:"path"`
-		Target    string            `help:"Image target path." env:"COB_IMAGE_TARGET" default:"dist/images"`
+		Target    string            `help:"Image target path." env:"COB_IMAGE_TARGET" type:"path" default:"dist/images"`
 		PreBuild  string            `help:"Pre-build command." env:"COB_IMAGE_PREBUILD"`
 		PostBuild string            `help:"Post-build command." env:"COB_IMAGE_POSTBUILD"`
 		Ref       map[string]string `help:"Image refs." env:"COB_IMAGE_REF"`
-	} `embed:"" prefix:"image."`
+	} `embed:"" prefix:"image-"`
 }
 
 func main() {
-	ctx := kong.Parse(&cli,
-		kong.Name("cob"),
-		kong.UsageOnError(),
-	)
+	// ctx := kong.Parse(&cli,
+	// 	kong.Name("cob"),
+	// 	kong.UsageOnError(),
+	// )
 
-	f, err := os.Open(cli.ConfigFile)
-	ctx.FatalIfErrorf(err)
+	// if f, err := os.Open(cli.ConfigFile); err == nil {
+	// 	resolver, err := kongyaml.Loader(f)
+	// 	ctx.FatalIfErrorf(err)
 
+	// 	ctx = kong.Parse(&cli,
+	// 		kong.Name("cob"),
+	// 		kong.UsageOnError(),
+	// 		kong.Resolvers(resolver),
+	// 	)
+	// }
+
+	f, err := os.Open("cob.yaml")
+	if err != nil {
+		panic(err)
+	}
 	resolver, err := kongyaml.Loader(f)
-	ctx.FatalIfErrorf(err)
+	if err != nil {
+		panic(err)
+	}
 
-	ctx = kong.Parse(&cli,
+	ctx := kong.Parse(&cli,
 		kong.Name("cob"),
 		kong.UsageOnError(),
 		kong.Resolvers(resolver),
@@ -63,7 +83,7 @@ func glob(paths []string) ([]string, error) {
 	return matches, nil
 }
 
-func getPool() (*artifact.Pool, error) {
+func getBuilder() (*artifact.Builder, error) {
 	packages := []*artifact.Package{}
 	images := []*artifact.Image{}
 
@@ -72,6 +92,9 @@ func getPool() (*artifact.Pool, error) {
 	} else {
 		for _, p := range paths {
 			pkg, err := artifact.NewPackage(p, cli.Package.Target)
+			pkg.SigningKey = cli.SigningKey
+			pkg.PreBuild = cli.Package.PreBuild
+			pkg.PostBuild = cli.Package.PostBuild
 			if err != nil {
 				return nil, err
 			}
@@ -79,7 +102,7 @@ func getPool() (*artifact.Pool, error) {
 		}
 	}
 
-	if paths, err := glob(cli.Package.Source); err != nil {
+	if paths, err := glob(cli.Image.Source); err != nil {
 		return nil, err
 	} else {
 		for _, p := range paths {
@@ -87,9 +110,18 @@ func getPool() (*artifact.Pool, error) {
 			if err != nil {
 				return nil, err
 			}
+			path, err := filepath.Abs(cli.Package.Target)
+			if err != nil {
+				return nil, err
+			}
+			image.PreBuild = cli.Image.PreBuild
+			image.PostBuild = cli.Image.PostBuild
+			image.Ref = cli.Image.Ref[strings.TrimSuffix(filepath.Base(p), ".yaml")]
+			image.ExtraRepos = append(cli.RepositoryAppend, path)
+			image.ExtraKeys = cli.KeyringAppend
 			images = append(images, image)
 		}
 	}
 
-	return artifact.NewPool(packages, images)
+	return artifact.NewBuilder(packages, images)
 }

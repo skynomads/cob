@@ -4,7 +4,12 @@ ARG VARIANT="3.16"
 FROM mcr.microsoft.com/vscode/devcontainers/base:0-alpine-${VARIANT}
 
 USER vscode
-ENV PATH=$HOME/go/bin:$PATH
+ENV PATH="$HOME/go/bin:$PATH"
+WORKDIR /home/vscode
 
-RUN sudo apk add go gopls apk-tools \
-  && go install github.com/spf13/cobra-cli@latest
+RUN echo "@testing http://dl-cdn.alpinelinux.org/alpine/edge/testing" | sudo tee -a /etc/apk/repositories \
+  && sudo apk add go build-base bubblewrap apk-tools apko@testing \
+  && go install golang.org/x/tools/gopls@latest \
+  && go install golang.org/x/tools/cmd/goimports@latest \
+  && git clone https://github.com/chainguard-dev/melange.git \
+  && cd melange && sudo make melange install && cd .. && rm -rf melange

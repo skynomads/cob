@@ -5,6 +5,8 @@ import (
 	"os"
 	"os/exec"
 	"path"
+	"path/filepath"
+	"strings"
 	"sync"
 	"time"
 
@@ -15,14 +17,16 @@ import (
 )
 
 type Image struct {
-	Source    string
-	Target    string
-	Ref       string
-	PreBuild  string
-	PostBuild string
-	Config    types.ImageConfiguration
-	lastBuild time.Time
-	mutex     sync.Mutex
+	Source     string
+	Target     string
+	Ref        string
+	ExtraRepos []string
+	ExtraKeys  []string
+	PreBuild   string
+	PostBuild  string
+	Config     types.ImageConfiguration
+	lastBuild  time.Time
+	mutex      sync.Mutex
 }
 
 func NewImage(source string, target string) (*Image, error) {
@@ -61,7 +65,14 @@ func (i *Image) Build() error {
 	}
 	defer os.RemoveAll(wd)
 
-	bc, err := build.New(wd, build.WithConfig(i.Source))
+	options := []build.Option{
+		build.WithConfig(i.Source),
+		build.WithExtraRepos(i.ExtraRepos),
+		build.WithExtraKeys(i.ExtraKeys),
+		build.WithTarball(filepath.Join(wd, "layer.tar.gz")),
+	}
+
+	bc, err := build.New(wd, options...)
 	if err != nil {
 		return err
 	}
@@ -78,23 +89,20 @@ func (i *Image) Build() error {
 	// 	bc.Options.SBOMPath = filepath.Dir(dir)
 	// }
 
-	// if len(bc.ImageConfiguration.Archs) != 0 {
-	// 	bc.Logger().Printf("WARNING: ignoring archs in config, only building for current arch (%s)", bc.Options.Arch)
-	// }
-
-	// bc.Logger().Printf("building image '%s'", imageRef)
-
 	layer, err := bc.BuildLayer()
 	if err != nil {
 		return fmt.Errorf("failed to build layer image: %w", err)
 	}
 	defer os.Remove(layer)
 
-	output := path.Join(i.Target, fmt.Sprintf("%s.tar.gz", path.Base(i.Target)))
+	output := path.Join(i.Target, fmt.Sprintf("%s.tar.gz", strings.TrimSuffix(filepath.Base(i.Source), ".yaml")))
+
+	if err := os.MkdirAll(i.Target, os.ModePerm); err != nil {
+		return err
+	}
 
 	if err := oci.BuildImageTarballFromLayer(
-		i.Ref, layer, output, bc.ImageConfiguration, bc.Options.SourceDateEpoch, bc.Options.Arch,
-		bc.Logger(), bc.Options.SBOMPath, bc.Options.SBOMFormats); err != nil {
+		i.Ref, layer, output, bc.ImageConfiguration, bc.Logger(), bc.Options); err != nil {
 		return fmt.Errorf("failed to build OCI image: %w", err)
 	}
 

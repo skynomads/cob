@@ -8,28 +8,28 @@ import (
 	"github.com/fsnotify/fsnotify"
 )
 
-type Pool struct {
+type Builder struct {
 	Packages []*Package
 	Images   []*Image
-	pool     *pond.WorkerPool
+	Pool     *pond.WorkerPool
 }
 
-func NewPool(packages []*Package, images []*Image) (*Pool, error) {
+func NewBuilder(packages []*Package, images []*Image) (*Builder, error) {
 	pool := pond.New(runtime.NumCPU(), 1000)
-	return &Pool{
+	return &Builder{
 		Packages: packages,
 		Images:   images,
-		pool:     pool,
+		Pool:     pool,
 	}, nil
 }
 
-func (p *Pool) BuildImageWithPackages(ctx context.Context, image *Image) *pond.TaskGroupWithContext {
-	group, _ := p.pool.GroupContext(ctx)
+func (b *Builder) BuildImageWithPackages(ctx context.Context, image *Image) *pond.TaskGroupWithContext {
+	group, _ := b.Pool.GroupContext(ctx)
 
 	group.Submit(func() error {
-		group, _ := p.pool.GroupContext(ctx)
+		group, _ := b.Pool.GroupContext(ctx)
 
-		for _, dep := range p.FindImageDependencies(image) {
+		for _, dep := range b.FindImageDependencies(image) {
 			group.Submit(func() error {
 				return dep.Build()
 			})
@@ -45,19 +45,19 @@ func (p *Pool) BuildImageWithPackages(ctx context.Context, image *Image) *pond.T
 	return group
 }
 
-func (p *Pool) GetWatcher() (*fsnotify.Watcher, error) {
+func (b *Builder) GetWatcher() (*fsnotify.Watcher, error) {
 	watcher, err := fsnotify.NewWatcher()
 	if err != nil {
 		return nil, err
 	}
 
-	for _, p := range p.Packages {
+	for _, p := range b.Packages {
 		if err := watcher.Add(p.Source); err != nil {
 			return nil, err
 		}
 	}
 
-	for _, c := range p.Images {
+	for _, c := range b.Images {
 		if err := watcher.Add(c.Source); err != nil {
 			return nil, err
 		}
@@ -66,10 +66,10 @@ func (p *Pool) GetWatcher() (*fsnotify.Watcher, error) {
 	return watcher, nil
 }
 
-func (p *Pool) FindImageDependencies(image *Image) []*Package {
+func (b *Builder) FindImageDependencies(image *Image) []*Package {
 	deps := []*Package{}
 	for _, dep := range image.Config.Contents.Packages {
-		for _, pkg := range p.Packages {
+		for _, pkg := range b.Packages {
 			if pkg.Config.Package.Name == dep {
 				deps = append(deps, pkg)
 			} else {
@@ -85,9 +85,9 @@ func (p *Pool) FindImageDependencies(image *Image) []*Package {
 	return deps
 }
 
-func (p *Pool) FindPackageDependants(pkg *Package) []*Image {
+func (b *Builder) FindPackageDependants(pkg *Package) []*Image {
 	dep := []*Image{}
-	for _, image := range p.Images {
+	for _, image := range b.Images {
 		for _, cpkg := range image.Config.Contents.Packages {
 			if cpkg == pkg.Config.Package.Name {
 				dep = append(dep, image)
@@ -98,24 +98,16 @@ func (p *Pool) FindPackageDependants(pkg *Package) []*Image {
 	return dep
 }
 
-func (p *Pool) FindArtifact(source string) (*Package, *Image) {
-	for _, pkg := range p.Packages {
+func (b *Builder) FindArtifact(source string) (*Package, *Image) {
+	for _, pkg := range b.Packages {
 		if pkg.Source == source {
 			return pkg, nil
 		}
 	}
-	for _, image := range p.Images {
+	for _, image := range b.Images {
 		if image.Source == source {
 			return nil, image
 		}
 	}
 	return nil, nil
-}
-
-func (p *Pool) Stop() {
-	p.pool.Stop()
-}
-
-func (p *Pool) StopAndWait() {
-	p.pool.StopAndWait()
 }

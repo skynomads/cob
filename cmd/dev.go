@@ -14,12 +14,13 @@ type devCmd struct {
 func (r *devCmd) Run() error {
 	ctx := context.Background()
 
-	pool, err := getPool()
+	builder, err := getBuilder()
 	if err != nil {
 		return err
 	}
+	defer builder.Pool.Stop()
 
-	watcher, err := pool.GetWatcher()
+	watcher, err := builder.GetWatcher()
 	if err != nil {
 		return err
 	}
@@ -34,17 +35,17 @@ func (r *devCmd) Run() error {
 			if event.Has(fsnotify.Write) {
 				log.Println("modified file:", event.Name)
 
-				pkg, cont := pool.FindArtifact(event.Name)
+				pkg, img := builder.FindArtifact(event.Name)
 				if pkg != nil {
-					dep := pool.FindPackageDependants(pkg)
+					dep := builder.FindPackageDependants(pkg)
 					if len(dep) > 0 {
-						for _, cont := range dep {
-							go func(cont *artifact.Image) {
-								g := pool.BuildImageWithPackages(ctx, cont)
+						for _, img := range dep {
+							go func(img *artifact.Image) {
+								g := builder.BuildImageWithPackages(ctx, img)
 								if err := g.Wait(); err != nil {
 									log.Println("error:", err)
 								}
-							}(cont)
+							}(img)
 						}
 					} else {
 						if err := pkg.Build(); err != nil {
@@ -52,8 +53,8 @@ func (r *devCmd) Run() error {
 						}
 					}
 				}
-				if cont != nil {
-					if err := cont.Build(); err != nil {
+				if img != nil {
+					if err := img.Build(); err != nil {
 						log.Println("error:", err)
 					}
 				}

@@ -7,18 +7,20 @@ import (
 	"sync"
 	"time"
 
-	melange "chainguard.dev/melange/pkg/build"
+	"chainguard.dev/apko/pkg/build/types"
+	"chainguard.dev/melange/pkg/build"
 	"gopkg.in/yaml.v3"
 )
 
 type Package struct {
-	Source    string
-	Target    string
-	PreBuild  string
-	PostBuild string
-	Config    melange.Configuration
-	lastBuild time.Time
-	mutex     sync.Mutex
+	Source     string
+	Target     string
+	PreBuild   string
+	PostBuild  string
+	SigningKey string
+	Config     build.Configuration
+	lastBuild  time.Time
+	mutex      sync.Mutex
 }
 
 func NewPackage(source string, target string) (*Package, error) {
@@ -27,7 +29,7 @@ func NewPackage(source string, target string) (*Package, error) {
 		return nil, err
 	}
 
-	var pc melange.Configuration
+	var pc build.Configuration
 	if err := yaml.Unmarshal(config, &pc); err != nil {
 		return nil, fmt.Errorf("failed to parse package configuration: %w", err)
 	}
@@ -60,12 +62,16 @@ func (p *Package) Build() error {
 		}
 	}
 
-	options := []melange.Option{
-		melange.WithConfig(p.Source),
-		melange.WithOutDir(p.Target),
+	options := []build.Option{
+		build.WithConfig(p.Source),
+		build.WithOutDir(p.Target),
+		build.WithWorkspaceDir(""),
+		build.WithArch(types.ParseArchitecture("amd64")),
+		build.WithGenerateIndex(true),
+		build.WithSigningKey(p.SigningKey),
 	}
 
-	bc, err := melange.New(options...)
+	bc, err := build.New(options...)
 	if err != nil {
 		return err
 	}

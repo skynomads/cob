@@ -2,11 +2,16 @@ package:
   source:
     - pkg/*.yaml
   target: dist/pkg
-  preBuild: |
+  pre-build: |
     echo pre-build
+  post-build: |
+    echo post-build
 image:
   source:
-    - cont/*.yaml
-  target: dist/cont
+    - img/*.yaml
+  target: dist/img
   ref:
-    helloworld: example.com/helloworld:1.0.0
+    hello: docker.io/example/hello:1.0.0
+signing-key: melange.rsa
+keyring-append:
+  - melange.rsa.pub

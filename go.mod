@@ -1,4 +1,4 @@
-module github.com/jgillich/cob
+module github.com/skynomads/cob
 
 go 1.18
 

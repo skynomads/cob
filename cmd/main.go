@@ -7,7 +7,7 @@ import (
 
 	"github.com/alecthomas/kong"
 	kongyaml "github.com/alecthomas/kong-yaml"
-	"github.com/jgillich/cob/artifact"
+	"github.com/skynomads/cob/artifact"
 )
 
 var cli struct {

@@ -5,7 +5,7 @@ import (
 	"log"
 
 	"github.com/fsnotify/fsnotify"
-	"github.com/jgillich/cob/artifact"
+	"github.com/skynomads/cob/artifact"
 )
 
 type devCmd struct {

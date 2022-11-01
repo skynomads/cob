@@ -4,9 +4,15 @@ Lightning fast builds for [apko](https://github.com/chainguard-dev/apko) and [me
 
 * Detects changes and rebuilds what changed
 * Watch mode that triggers image rebuilds when packages change
-* Run pre & post build commands
+* Runs custom commands before and after builds
 
 Note: This is alpha software.
+
+## Install
+
+```sh
+go install github.com/skynomads/cob@main
+```
 
 ## Example
 

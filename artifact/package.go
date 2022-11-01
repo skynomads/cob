@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 	"os/exec"
+	"path/filepath"
 	"sync"
 	"time"
 
@@ -66,6 +67,7 @@ func (p *Package) Build() error {
 	options := []build.Option{
 		build.WithConfig(p.Source),
 		build.WithOutDir(p.Target),
+		build.WithSourceDir(filepath.Dir(p.Source)),
 		build.WithWorkspaceDir(p.Workspace),
 		build.WithEmptyWorkspace(false),
 		build.WithArch(types.ParseArchitecture("amd64")),

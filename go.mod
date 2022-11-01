@@ -6,6 +6,7 @@ require (
 	chainguard.dev/apko v0.5.1-0.20221020161614-d9f4575ab106
 	chainguard.dev/melange v0.1.1-0.20221020223937-e2776c80affc
 	github.com/alecthomas/kong v0.7.0
+	github.com/alecthomas/kong-yaml v0.1.2-0.20220114214841-25e9103ca662
 	github.com/alitto/pond v1.8.2
 	github.com/fsnotify/fsnotify v1.6.0
 	gopkg.in/yaml.v3 v3.0.1
@@ -25,10 +26,7 @@ require (
 	github.com/MakeNowJust/heredoc v1.0.0 // indirect
 	github.com/Microsoft/go-winio v0.6.0 // indirect
 	github.com/ProtonMail/go-crypto v0.0.0-20220824120805-4b6e5c587895 // indirect
-	github.com/PuerkitoBio/purell v1.1.1 // indirect
-	github.com/PuerkitoBio/urlesc v0.0.0-20170810143723-de5bf2ad4578 // indirect
 	github.com/acomagu/bufpipe v1.0.3 // indirect
-	github.com/alecthomas/kong-yaml v0.1.2-0.20220114214841-25e9103ca662 // indirect
 	github.com/antonfisher/nested-logrus-formatter v1.3.1 // indirect
 	github.com/asaskevich/govalidator v0.0.0-20210307081110-f21760c49a8d // indirect
 	github.com/avast/retry-go v3.0.0+incompatible // indirect
@@ -71,10 +69,8 @@ require (
 	github.com/go-openapi/strfmt v0.21.3 // indirect
 	github.com/go-openapi/swag v0.22.3 // indirect
 	github.com/go-openapi/validate v0.22.0 // indirect
-	github.com/go-stack/stack v1.8.1 // indirect
 	github.com/golang-jwt/jwt/v4 v4.4.2 // indirect
 	github.com/golang/protobuf v1.5.2 // indirect
-	github.com/google/go-cmp v0.5.9 // indirect
 	github.com/google/go-containerregistry v0.12.0 // indirect
 	github.com/google/shlex v0.0.0-20191202100458-e7afc7fbc510 // indirect
 	github.com/hashicorp/errwrap v1.1.0 // indirect

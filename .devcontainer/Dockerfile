@@ -4,7 +4,7 @@ ARG VARIANT="3.16"
 FROM mcr.microsoft.com/vscode/devcontainers/base:0-alpine-${VARIANT}
 
 USER vscode
-ENV PATH="$HOME/go/bin:$PATH"
+ENV PATH="/home/vscode/go/bin:$PATH"
 WORKDIR /home/vscode
 
 RUN echo "@testing http://dl-cdn.alpinelinux.org/alpine/edge/testing" | sudo tee -a /etc/apk/repositories \

@@ -1,4 +1,4 @@
-package main
+package cmd
 
 import (
 	"os"
@@ -36,37 +36,22 @@ var cli struct {
 	} `embed:"" prefix:"image-"`
 }
 
-func main() {
-	// ctx := kong.Parse(&cli,
-	// 	kong.Name("cob"),
-	// 	kong.UsageOnError(),
-	// )
-
-	// if f, err := os.Open(cli.ConfigFile); err == nil {
-	// 	resolver, err := kongyaml.Loader(f)
-	// 	ctx.FatalIfErrorf(err)
-
-	// 	ctx = kong.Parse(&cli,
-	// 		kong.Name("cob"),
-	// 		kong.UsageOnError(),
-	// 		kong.Resolvers(resolver),
-	// 	)
-	// }
-
-	f, err := os.Open("cob.yaml")
-	if err != nil {
-		panic(err)
-	}
-	resolver, err := kongyaml.Loader(f)
-	if err != nil {
-		panic(err)
-	}
-
+func Run() {
 	ctx := kong.Parse(&cli,
 		kong.Name("cob"),
 		kong.UsageOnError(),
-		kong.Resolvers(resolver),
 	)
+
+	if f, err := os.Open(cli.ConfigFile); err == nil {
+		resolver, err := kongyaml.Loader(f)
+		ctx.FatalIfErrorf(err)
+
+		ctx = kong.Parse(&cli,
+			kong.Name("cob"),
+			kong.UsageOnError(),
+			kong.Resolvers(resolver),
+		)
+	}
 
 	ctx.FatalIfErrorf(ctx.Run())
 }

@@ -14,26 +14,28 @@ var cli struct {
 	Dev   devCmd   `cmd:"dev" help:"Development mode."`
 	Build buildCmd `cmd:"dev" help:"Build packages and images."`
 
-	ConfigFile string `help:"Cob config file." short:"f" env:"COB_CONFIG_FILE" type:"path" default:"cob.yaml"`
+	ConfigFile string `help:"Cob config file." short:"f" type:"path" default:"cob.yaml"`
 
 	SigningKey    string   `help:"Key to use for signing." type:"path"`
 	KeyringAppend []string `help:"Path to extra keys to include in the keyring" type:"path"`
 
 	RepositoryAppend []string `help:"Path to extra repositories to include" type:"path"`
 
+	Env map[string]string `help:"Environment variables to set"`
+
 	Package struct {
-		Source    []string `help:"Package source paths." env:"COB_PACKAGE_SOURCE" type:"path"`
-		Target    string   `help:"Package target path." env:"COB_PACKAGE_TARGET" type:"path" default:"dist/packages"`
-		PreBuild  string   `help:"Pre-build command." env:"COB_PACKAGE_PREBUILD"`
-		PostBuild string   `help:"Post-build command." env:"COB_PACKAGE_POSTBUILD"`
+		Source    []string `help:"Package source paths." type:"path"`
+		Target    string   `help:"Package target path." type:"path" default:"dist/packages"`
+		PreBuild  string   `help:"Pre-build command."`
+		PostBuild string   `help:"Post-build command."`
 		Workspace string   `help:"Workspace path." type:"path"`
 	} `embed:"" prefix:"package-"`
 	Image struct {
-		Source    []string          `help:"Image source paths." env:"COB_IMAGE_SOURCE" type:"path"`
-		Target    string            `help:"Image target path." env:"COB_IMAGE_TARGET" type:"path" default:"dist/images"`
-		PreBuild  string            `help:"Pre-build command." env:"COB_IMAGE_PREBUILD"`
-		PostBuild string            `help:"Post-build command." env:"COB_IMAGE_POSTBUILD"`
-		Ref       map[string]string `help:"Image refs." env:"COB_IMAGE_REF"`
+		Source    []string          `help:"Image source paths." type:"path"`
+		Target    string            `help:"Image target path." type:"path" default:"dist/images"`
+		PreBuild  string            `help:"Pre-build command."`
+		PostBuild string            `help:"Post-build command."`
+		Ref       map[string]string `help:"Image refs."`
 	} `embed:"" prefix:"image-"`
 }
 
@@ -52,6 +54,10 @@ func Run() {
 			kong.UsageOnError(),
 			kong.Resolvers(resolver),
 		)
+	}
+
+	for k, v := range cli.Env {
+		ctx.FatalIfErrorf(os.Setenv(k, v))
 	}
 
 	ctx.FatalIfErrorf(ctx.Run())

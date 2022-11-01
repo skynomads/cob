@@ -26,6 +26,7 @@ var cli struct {
 		Target    string   `help:"Package target path." env:"COB_PACKAGE_TARGET" type:"path" default:"dist/packages"`
 		PreBuild  string   `help:"Pre-build command." env:"COB_PACKAGE_PREBUILD"`
 		PostBuild string   `help:"Post-build command." env:"COB_PACKAGE_POSTBUILD"`
+		Workspace string   `help:"Workspace path." type:"path"`
 	} `embed:"" prefix:"package-"`
 	Image struct {
 		Source    []string          `help:"Image source paths." env:"COB_IMAGE_SOURCE" type:"path"`
@@ -80,6 +81,7 @@ func getBuilder() (*artifact.Builder, error) {
 			pkg.SigningKey = cli.SigningKey
 			pkg.PreBuild = cli.Package.PreBuild
 			pkg.PostBuild = cli.Package.PostBuild
+			pkg.Workspace = cli.Package.Workspace
 			if err != nil {
 				return nil, err
 			}

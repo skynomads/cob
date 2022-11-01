@@ -18,6 +18,7 @@ type Package struct {
 	PreBuild   string
 	PostBuild  string
 	SigningKey string
+	Workspace  string
 	Config     build.Configuration
 	lastBuild  time.Time
 	mutex      sync.Mutex
@@ -65,7 +66,8 @@ func (p *Package) Build() error {
 	options := []build.Option{
 		build.WithConfig(p.Source),
 		build.WithOutDir(p.Target),
-		build.WithWorkspaceDir(""),
+		build.WithWorkspaceDir(p.Workspace),
+		build.WithEmptyWorkspace(false),
 		build.WithArch(types.ParseArchitecture("amd64")),
 		build.WithGenerateIndex(true),
 		build.WithSigningKey(p.SigningKey),

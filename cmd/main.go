@@ -11,7 +11,7 @@ import (
 )
 
 var cli struct {
-	Dev   devCmd   `cmd:"dev" help:"Development mode."`
+	Watch watchCmd `cmd:"dev" help:"Watch mode."`
 	Build buildCmd `cmd:"dev" help:"Build packages and images."`
 
 	ConfigFile string `help:"Cob config file." short:"f" type:"path" default:"cob.yaml"`

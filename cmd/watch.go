@@ -8,10 +8,10 @@ import (
 	"github.com/skynomads/cob/artifact"
 )
 
-type devCmd struct {
+type watchCmd struct {
 }
 
-func (r *devCmd) Run() error {
+func (r *watchCmd) Run() error {
 	ctx := context.Background()
 
 	build := buildCmd{}

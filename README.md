@@ -8,7 +8,7 @@ Lightning fast builds for [apko](https://github.com/chainguard-dev/apko) and [me
 
 Note: This is alpha software.
 
-## Example:
+## Example
 
 `cob.yaml`:
 
@@ -17,8 +17,6 @@ package:
   source:
     - pkg/*.yaml
   target: dist/pkg
-  pre-build: |
-    echo pre-build
   post-build: |
     echo post-build
 image:
@@ -32,4 +30,4 @@ keyring-append:
   - melange.rsa.pub
 ```
 
-To build, run `cob build`. To watch, run `cob dev`.
+To build, run `cob build`. To watch, run `cob watch`.

@@ -2,8 +2,9 @@
 
 Lightning fast builds for [apko](https://github.com/chainguard-dev/apko) and [melange](https://github.com/chainguard-dev/melange).
 
-* Detects changes and rebuilds what changed
-* Watch mode that triggers image rebuilds when packages change
+* Run builds in parallel
+* (Re)build changed files only
+* Watch mode that triggers builds on-demand
 * Runs custom commands before and after builds
 
 Note: This is alpha software.

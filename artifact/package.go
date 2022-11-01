@@ -79,7 +79,7 @@ func (p *Package) Build() error {
 			build.WithWorkspaceDir(p.Workspace),
 			build.WithEmptyWorkspace(false),
 			build.WithArch(arch),
-			build.WithGenerateIndex(true),
+			build.WithGenerateIndex(false),
 			build.WithSigningKey(p.SigningKey),
 		}
 

@@ -5,7 +5,7 @@ import (
 	"log"
 
 	"github.com/fsnotify/fsnotify"
-	"github.com/jgillich/cob/pkg/artifact"
+	"github.com/jgillich/cob/artifact"
 )
 
 type devCmd struct {
@@ -13,6 +13,11 @@ type devCmd struct {
 
 func (r *devCmd) Run() error {
 	ctx := context.Background()
+
+	build := buildCmd{}
+	if err := build.Run(); err != nil {
+		return err
+	}
 
 	builder, err := getBuilder()
 	if err != nil {
@@ -31,10 +36,7 @@ func (r *devCmd) Run() error {
 			if !ok {
 				return nil
 			}
-			log.Println("event:", event)
 			if event.Has(fsnotify.Write) {
-				log.Println("modified file:", event.Name)
-
 				pkg, img := builder.FindArtifact(event.Name)
 				if pkg != nil {
 					dep := builder.FindPackageDependants(pkg)
@@ -58,7 +60,6 @@ func (r *devCmd) Run() error {
 						log.Println("error:", err)
 					}
 				}
-
 			}
 		case err, ok := <-watcher.Errors:
 			if !ok {

@@ -9,6 +9,7 @@ WORKDIR /home/vscode
 
 RUN echo "@testing http://dl-cdn.alpinelinux.org/alpine/edge/testing" | sudo tee -a /etc/apk/repositories \
   && sudo apk add go build-base bubblewrap apk-tools apko@testing \
+  && go install github.com/goreleaser/goreleaser@latest \
   && go install golang.org/x/tools/gopls@latest \
   && go install golang.org/x/tools/cmd/goimports@latest \
   && git clone https://github.com/chainguard-dev/melange.git \

@@ -36,10 +36,17 @@ func NewPackage(source string, target string) (*Package, error) {
 		return nil, fmt.Errorf("failed to parse package configuration: %w", err)
 	}
 
+	arch := types.ParseArchitectures(pc.Package.TargetArchitecture)[0].ToAPK()
+	var lastBuild time.Time
+	if fi, err := os.Stat(filepath.Join(target, arch, fmt.Sprintf("%s-%s-r%d.apk", pc.Package.Name, pc.Package.Version, pc.Package.Epoch))); err == nil {
+		lastBuild = fi.ModTime()
+	}
+
 	return &Package{
-		Source: source,
-		Target: target,
-		Config: pc,
+		Source:    source,
+		Target:    target,
+		Config:    pc,
+		lastBuild: lastBuild,
 	}, nil
 }
 
@@ -64,24 +71,26 @@ func (p *Package) Build() error {
 		}
 	}
 
-	options := []build.Option{
-		build.WithConfig(p.Source),
-		build.WithOutDir(p.Target),
-		build.WithSourceDir(filepath.Dir(p.Source)),
-		build.WithWorkspaceDir(p.Workspace),
-		build.WithEmptyWorkspace(false),
-		build.WithArch(types.ParseArchitecture("amd64")),
-		build.WithGenerateIndex(true),
-		build.WithSigningKey(p.SigningKey),
-	}
+	for _, arch := range types.ParseArchitectures(p.Config.Package.TargetArchitecture) {
+		options := []build.Option{
+			build.WithConfig(p.Source),
+			build.WithOutDir(p.Target),
+			build.WithSourceDir(filepath.Dir(p.Source)),
+			build.WithWorkspaceDir(p.Workspace),
+			build.WithEmptyWorkspace(false),
+			build.WithArch(arch),
+			build.WithGenerateIndex(true),
+			build.WithSigningKey(p.SigningKey),
+		}
 
-	bc, err := build.New(options...)
-	if err != nil {
-		return err
-	}
+		bc, err := build.New(options...)
+		if err != nil {
+			return err
+		}
 
-	if err := bc.BuildPackage(); err != nil {
-		return fmt.Errorf("failed to build package: %w", err)
+		if err := bc.BuildPackage(); err != nil {
+			return fmt.Errorf("failed to build package: %w", err)
+		}
 	}
 
 	if len(p.PostBuild) > 0 {

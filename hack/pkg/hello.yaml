@@ -4,7 +4,8 @@ package:
   epoch: 7
   description: "the GNU hello world program"
   target-architecture:
-    - all
+    - amd64
+    #- i386
   copyright:
     - paths:
       - "*"

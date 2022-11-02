@@ -14,18 +14,17 @@ import (
 )
 
 type Package struct {
-	Source     string
-	Target     string
-	PreBuild   string
-	PostBuild  string
-	SigningKey string
-	Workspace  string
-	Config     build.Configuration
-	lastBuild  time.Time
-	mutex      sync.Mutex
+	Source    string
+	Target    string
+	PreBuild  string
+	PostBuild string
+	Config    build.Configuration
+	Options   []build.Option
+	lastBuild time.Time
+	mutex     sync.Mutex
 }
 
-func NewPackage(source string, target string) (*Package, error) {
+func NewPackage(source string, target string, options []build.Option) (*Package, error) {
 	config, err := os.ReadFile(source)
 	if err != nil {
 		return nil, err
@@ -46,6 +45,7 @@ func NewPackage(source string, target string) (*Package, error) {
 		Source:    source,
 		Target:    target,
 		Config:    pc,
+		Options:   options,
 		lastBuild: lastBuild,
 	}, nil
 }
@@ -72,16 +72,13 @@ func (p *Package) Build() error {
 	}
 
 	for _, arch := range types.ParseArchitectures(p.Config.Package.TargetArchitecture) {
-		options := []build.Option{
+		options := append([]build.Option{
 			build.WithConfig(p.Source),
 			build.WithOutDir(p.Target),
 			build.WithSourceDir(filepath.Dir(p.Source)),
-			build.WithWorkspaceDir(p.Workspace),
-			build.WithEmptyWorkspace(false),
 			build.WithArch(arch),
 			build.WithGenerateIndex(false),
-			build.WithSigningKey(p.SigningKey),
-		}
+		}, p.Options...)
 
 		bc, err := build.New(options...)
 		if err != nil {

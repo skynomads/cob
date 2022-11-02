@@ -1,5 +1,5 @@
 package:
-  source:
+  config:
     - pkg/*.yaml
   target: dist/pkg
   pre-build: |
@@ -7,7 +7,7 @@ package:
   post-build: |
     echo post-build
 image:
-  source:
+  config:
     - img/*.yaml
   target: dist/img
   ref:

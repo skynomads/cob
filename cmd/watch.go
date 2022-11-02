@@ -45,19 +45,19 @@ func (r *watchCmd) Run() error {
 							go func(img *artifact.Image) {
 								g := builder.BuildImageWithPackages(ctx, img)
 								if err := g.Wait(); err != nil {
-									log.Println("error:", err)
+									log.Println(err)
 								}
 							}(img)
 						}
 					} else {
 						if err := pkg.Build(); err != nil {
-							log.Println("error:", err)
+							log.Println(err)
 						}
 					}
 				}
 				if img != nil {
 					if err := img.Build(); err != nil {
-						log.Println("error:", err)
+						log.Println(err)
 					}
 				}
 			}

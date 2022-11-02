@@ -111,3 +111,34 @@ func (b *Builder) FindArtifact(source string) (*Package, *Image) {
 	}
 	return nil, nil
 }
+
+// TODO index is internal
+// "chainguard.dev/melange/internal/index"
+// func (b *Builder) GenerateIndex() error {
+// 	for _, arch := range types.ParseArchitectures(b.Packages[0].Config.Package.TargetArchitecture) {
+// 		packagesDir := filepath.Join(b.Packages[0].Target, arch.ToAPK())
+// 		files, err := os.ReadDir(packagesDir)
+// 		if err != nil {
+// 			return fmt.Errorf("unable to list packages: %w", err)
+// 		}
+// 		apkFiles := []string{}
+// 		for _, file := range files {
+// 			n := filepath.Join(packagesDir, file.Name())
+// 			if !file.IsDir() && strings.HasSuffix(n, ".apk") {
+// 				apkFiles = append(apkFiles, n)
+// 			}
+// 		}
+// 		apkIndexFilename := filepath.Join(packagesDir, "APKINDEX.tar.gz")
+// 		if err := index.Index(ctx.Logger, apkIndexFilename, apkFiles); err != nil {
+// 			return fmt.Errorf("failed to create index: %w", err)
+// 		}
+
+// 		if ctx.SigningKey != "" {
+// 			ctx.Logger.Printf("signing apk index at %s", apkIndexFilename)
+// 			if err := sign.SignIndex(ctx.Logger, ctx.SigningKey, apkIndexFilename); err != nil {
+// 				return fmt.Errorf("failed to sign apk index: %w", err)
+// 			}
+// 		}
+// 	}
+
+// }

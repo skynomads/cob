@@ -5,6 +5,8 @@ import (
 	"path/filepath"
 	"strings"
 
+	apko "chainguard.dev/apko/pkg/build"
+	melange "chainguard.dev/melange/pkg/build"
 	"github.com/alecthomas/kong"
 	kongyaml "github.com/alecthomas/kong-yaml"
 	"github.com/skynomads/cob/artifact"
@@ -24,14 +26,15 @@ var cli struct {
 	Env map[string]string `help:"Environment variables to set"`
 
 	Package struct {
-		Source    []string `help:"Package source paths." type:"path"`
+		Config    []string `help:"Package config paths." type:"path"`
 		Target    string   `help:"Package target path." type:"path" default:"dist/packages"`
 		PreBuild  string   `help:"Pre-build command."`
 		PostBuild string   `help:"Post-build command."`
 		Workspace string   `help:"Workspace path." type:"path"`
+		Source    string   `help:"Source path." type:"path"`
 	} `embed:"" prefix:"package-"`
 	Image struct {
-		Source    []string          `help:"Image source paths." type:"path"`
+		Config    []string          `help:"Image config paths." type:"path"`
 		Target    string            `help:"Image target path." type:"path" default:"dist/images"`
 		PreBuild  string            `help:"Pre-build command."`
 		PostBuild string            `help:"Post-build command."`
@@ -79,15 +82,20 @@ func getBuilder() (*artifact.Builder, error) {
 	packages := []*artifact.Package{}
 	images := []*artifact.Image{}
 
-	if paths, err := glob(cli.Package.Source); err != nil {
+	if paths, err := glob(cli.Package.Config); err != nil {
 		return nil, err
 	} else {
 		for _, p := range paths {
-			pkg, err := artifact.NewPackage(p, cli.Package.Target)
-			pkg.SigningKey = cli.SigningKey
+			options := []melange.Option{}
+			if len(cli.SigningKey) > 0 {
+				options = append(options, melange.WithSigningKey(cli.SigningKey))
+			}
+			if len(cli.Package.Workspace) > 0 {
+				melange.WithWorkspaceDir(cli.Package.Workspace)
+			}
+			pkg, err := artifact.NewPackage(p, cli.Package.Target, options)
 			pkg.PreBuild = cli.Package.PreBuild
 			pkg.PostBuild = cli.Package.PostBuild
-			pkg.Workspace = cli.Package.Workspace
 			if err != nil {
 				return nil, err
 			}
@@ -95,23 +103,25 @@ func getBuilder() (*artifact.Builder, error) {
 		}
 	}
 
-	if paths, err := glob(cli.Image.Source); err != nil {
+	if paths, err := glob(cli.Image.Config); err != nil {
 		return nil, err
 	} else {
 		for _, p := range paths {
-			image, err := artifact.NewImage(p, cli.Image.Target)
+			path, err := filepath.Abs(cli.Package.Target)
 			if err != nil {
 				return nil, err
 			}
-			path, err := filepath.Abs(cli.Package.Target)
+			options := []apko.Option{
+				apko.WithExtraRepos(append(cli.RepositoryAppend, path)),
+				apko.WithExtraKeys(cli.KeyringAppend),
+			}
+			image, err := artifact.NewImage(p, cli.Image.Target, options)
 			if err != nil {
 				return nil, err
 			}
 			image.PreBuild = cli.Image.PreBuild
 			image.PostBuild = cli.Image.PostBuild
 			image.Ref = cli.Image.Ref[strings.TrimSuffix(filepath.Base(p), ".yaml")]
-			image.ExtraRepos = append(cli.RepositoryAppend, path)
-			image.ExtraKeys = cli.KeyringAppend
 			images = append(images, image)
 		}
 	}

@@ -17,19 +17,18 @@ import (
 )
 
 type Image struct {
-	Source     string
-	Target     string
-	Ref        string
-	ExtraRepos []string
-	ExtraKeys  []string
-	PreBuild   string
-	PostBuild  string
-	Config     types.ImageConfiguration
-	lastBuild  time.Time
-	mutex      sync.Mutex
+	Source    string
+	Target    string
+	Ref       string
+	Options   []build.Option
+	PreBuild  string
+	PostBuild string
+	Config    types.ImageConfiguration
+	lastBuild time.Time
+	mutex     sync.Mutex
 }
 
-func NewImage(source string, target string) (*Image, error) {
+func NewImage(source string, target string, options []build.Option) (*Image, error) {
 	config, err := os.ReadFile(source)
 	if err != nil {
 		return nil, err
@@ -41,9 +40,10 @@ func NewImage(source string, target string) (*Image, error) {
 	}
 
 	return &Image{
-		Source: source,
-		Target: target,
-		Config: ic,
+		Source:  source,
+		Target:  target,
+		Options: options,
+		Config:  ic,
 	}, nil
 }
 
@@ -65,12 +65,10 @@ func (i *Image) Build() error {
 	}
 	defer os.RemoveAll(wd)
 
-	options := []build.Option{
+	options := append([]build.Option{
 		build.WithConfig(i.Source),
-		build.WithExtraRepos(i.ExtraRepos),
-		build.WithExtraKeys(i.ExtraKeys),
 		build.WithTarball(filepath.Join(wd, "layer.tar.gz")),
-	}
+	}, i.Options...)
 
 	bc, err := build.New(wd, options...)
 	if err != nil {

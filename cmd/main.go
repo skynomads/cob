@@ -93,6 +93,9 @@ func getBuilder() (*artifact.Builder, error) {
 			if len(cli.Package.Workspace) > 0 {
 				melange.WithWorkspaceDir(cli.Package.Workspace)
 			}
+			if len(cli.Package.Source) > 0 {
+				melange.WithSourceDir(cli.Package.Source)
+			}
 			pkg, err := artifact.NewPackage(p, cli.Package.Target, options)
 			pkg.PreBuild = cli.Package.PreBuild
 			pkg.PostBuild = cli.Package.PostBuild

@@ -91,10 +91,10 @@ func getBuilder() (*artifact.Builder, error) {
 				options = append(options, melange.WithSigningKey(cli.SigningKey))
 			}
 			if len(cli.Package.Workspace) > 0 {
-				melange.WithWorkspaceDir(cli.Package.Workspace)
+				options = append(options, melange.WithWorkspaceDir(cli.Package.Workspace))
 			}
 			if len(cli.Package.Source) > 0 {
-				melange.WithSourceDir(cli.Package.Source)
+				options = append(options, melange.WithSourceDir(cli.Package.Source))
 			}
 			pkg, err := artifact.NewPackage(p, cli.Package.Target, options)
 			pkg.PreBuild = cli.Package.PreBuild

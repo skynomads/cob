@@ -22,12 +22,13 @@ environment:
     repositories:
       - https://dl-cdn.alpinelinux.org/alpine/edge/main
     packages:
-      - alpine-baselayout-data
+      - alpine-base
       - busybox
       - build-base
       - scanelf
       - ssl_client
       - ca-certificates-bundle
+      - help2man
 
 pipeline:
   - uses: fetch

@@ -59,6 +59,42 @@ func Run() {
 		)
 	}
 
+	basePath, err := os.Getwd()
+	ctx.FatalIfErrorf(err)
+	if _, err := os.Open(cli.ConfigFile); err == nil {
+		p, err := filepath.Abs(cli.ConfigFile)
+		ctx.FatalIfErrorf(err)
+		basePath = filepath.Dir(p)
+	}
+
+	for i, c := range cli.Package.Config {
+		if !filepath.IsAbs(c) {
+			cli.Package.Config[i] = filepath.Join(basePath, c)
+		}
+	}
+	for i, c := range cli.KeyringAppend {
+		if !filepath.IsAbs(c) {
+			cli.KeyringAppend[i] = filepath.Join(basePath, c)
+		}
+	}
+	for i, c := range cli.Image.Config {
+		if !filepath.IsAbs(c) {
+			cli.Image.Config[i] = filepath.Join(basePath, c)
+		}
+	}
+	if !filepath.IsAbs(cli.Package.Source) {
+		cli.Package.Source = filepath.Join(basePath, cli.Package.Source)
+	}
+	if !filepath.IsAbs(cli.Package.Target) {
+		cli.Package.Target = filepath.Join(basePath, cli.Package.Target)
+	}
+	if !filepath.IsAbs(cli.SigningKey) {
+		cli.SigningKey = filepath.Join(basePath, cli.SigningKey)
+	}
+	if !filepath.IsAbs(cli.Image.Target) {
+		cli.Image.Target = filepath.Join(basePath, cli.Image.Target)
+	}
+
 	for k, v := range cli.Env {
 		ctx.FatalIfErrorf(os.Setenv(k, v))
 	}

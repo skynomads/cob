@@ -129,3 +129,5 @@ require (
 	gopkg.in/yaml.v2 v2.4.0 // indirect
 	sigs.k8s.io/release-utils v0.7.3 // indirect
 )
+
+replace chainguard.dev/melange v0.1.1-0.20221020223937-e2776c80affc => github.com/jgillich/melange v0.0.0-20221103084539-48b92aebdbaa

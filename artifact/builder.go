@@ -2,8 +2,12 @@ package artifact
 
 import (
 	"context"
+	"path/filepath"
 	"runtime"
 
+	"chainguard.dev/apko/pkg/build/types"
+	"chainguard.dev/melange/pkg/build"
+	"chainguard.dev/melange/pkg/index"
 	"github.com/alitto/pond"
 	"github.com/fsnotify/fsnotify"
 )
@@ -36,6 +40,10 @@ func (b *Builder) BuildImageWithPackages(ctx context.Context, image *Image) *pon
 		}
 
 		if err := group.Wait(); err != nil {
+			return err
+		}
+
+		if err := b.GenerateIndex(); err != nil {
 			return err
 		}
 
@@ -112,33 +120,35 @@ func (b *Builder) FindArtifact(source string) (*Package, *Image) {
 	return nil, nil
 }
 
-// TODO index is internal
-// "chainguard.dev/melange/internal/index"
-// func (b *Builder) GenerateIndex() error {
-// 	for _, arch := range types.ParseArchitectures(b.Packages[0].Config.Package.TargetArchitecture) {
-// 		packagesDir := filepath.Join(b.Packages[0].Target, arch.ToAPK())
-// 		files, err := os.ReadDir(packagesDir)
-// 		if err != nil {
-// 			return fmt.Errorf("unable to list packages: %w", err)
-// 		}
-// 		apkFiles := []string{}
-// 		for _, file := range files {
-// 			n := filepath.Join(packagesDir, file.Name())
-// 			if !file.IsDir() && strings.HasSuffix(n, ".apk") {
-// 				apkFiles = append(apkFiles, n)
-// 			}
-// 		}
-// 		apkIndexFilename := filepath.Join(packagesDir, "APKINDEX.tar.gz")
-// 		if err := index.Index(ctx.Logger, apkIndexFilename, apkFiles); err != nil {
-// 			return fmt.Errorf("failed to create index: %w", err)
-// 		}
+// TODO refactor
+func (b *Builder) GenerateIndex() error {
+	if len(b.Packages) == 0 {
+		return nil
+	}
 
-// 		if ctx.SigningKey != "" {
-// 			ctx.Logger.Printf("signing apk index at %s", apkIndexFilename)
-// 			if err := sign.SignIndex(ctx.Logger, ctx.SigningKey, apkIndexFilename); err != nil {
-// 				return fmt.Errorf("failed to sign apk index: %w", err)
-// 			}
-// 		}
-// 	}
+	for _, arch := range types.ParseArchitectures(b.Packages[0].Config.Package.TargetArchitecture) {
+		packageDir := filepath.Join(b.Packages[0].Target, arch.ToAPK())
 
-// }
+		bc, err := build.New(b.Packages[0].Options...)
+		if err != nil {
+			return err
+		}
+
+		opts := []index.Option{
+			index.WithPackageDir(packageDir),
+			index.WithIndexFile(filepath.Join(packageDir, "APKINDEX.tar.gz")),
+			index.WithSigningKey(bc.SigningKey),
+		}
+
+		ctx, err := index.New(opts...)
+		if err != nil {
+			return err
+		}
+
+		if err := ctx.GenerateIndex(); err != nil {
+			return err
+		}
+	}
+
+	return nil
+}

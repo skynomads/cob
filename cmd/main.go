@@ -122,7 +122,11 @@ func getBuilder() (*artifact.Builder, error) {
 		return nil, err
 	} else {
 		for _, p := range paths {
-			options := []melange.Option{}
+			options := []melange.Option{
+				melange.WithConfig(p),
+				melange.WithOutDir(cli.Package.Target),
+				melange.WithSourceDir(filepath.Dir(p)),
+			}
 			if len(cli.SigningKey) > 0 {
 				options = append(options, melange.WithSigningKey(cli.SigningKey))
 			}
@@ -146,12 +150,13 @@ func getBuilder() (*artifact.Builder, error) {
 		return nil, err
 	} else {
 		for _, p := range paths {
-			path, err := filepath.Abs(cli.Package.Target)
+			target, err := filepath.Abs(cli.Package.Target)
 			if err != nil {
 				return nil, err
 			}
 			options := []apko.Option{
-				apko.WithExtraRepos(append(cli.RepositoryAppend, path)),
+				apko.WithConfig(p),
+				apko.WithExtraRepos(append(cli.RepositoryAppend, target)),
 				apko.WithExtraKeys(cli.KeyringAppend),
 			}
 			image, err := artifact.NewImage(p, cli.Image.Target, options)

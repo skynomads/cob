@@ -73,9 +73,6 @@ func (p *Package) Build() error {
 
 	for _, arch := range types.ParseArchitectures(p.Config.Package.TargetArchitecture) {
 		options := append([]build.Option{
-			build.WithConfig(p.Source),
-			build.WithOutDir(p.Target),
-			build.WithSourceDir(filepath.Dir(p.Source)),
 			build.WithArch(arch),
 			build.WithGenerateIndex(false),
 		}, p.Options...)

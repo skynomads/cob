@@ -24,6 +24,10 @@ func (r *buildCmd) Run() error {
 		return err
 	}
 
+	if err := builder.GenerateIndex(); err != nil {
+		return err
+	}
+
 	group, _ = builder.Pool.GroupContext(ctx)
 	for _, i := range builder.Images {
 		group.Submit(i.Build)

@@ -66,7 +66,6 @@ func (i *Image) Build() error {
 	defer os.RemoveAll(wd)
 
 	options := append([]build.Option{
-		build.WithConfig(i.Source),
 		build.WithTarball(filepath.Join(wd, "layer.tar.gz")),
 	}, i.Options...)
 
